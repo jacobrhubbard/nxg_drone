@@ -13,6 +13,9 @@
   <depend>sdformat_urdf</depend>
   <depend>joint_state_publisher_gui</depend>
   <depend>nav_msgs</depend>
+  <depend>px4_msgs</depend>
+  <depend>open_vins</depend>
+  <depend>Micro-XRCE-DDS-Agent</depend>
   
   <exec_depend>robot_localization</exec_depend>
   <exec_depend>ros2launch</exec_depend>
