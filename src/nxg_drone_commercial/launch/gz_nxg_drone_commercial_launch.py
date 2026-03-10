@@ -61,6 +61,12 @@ def generate_launch_description():
         name='px4_ros_odom_translate',
     )
 
+    target_detection_node = Node(
+        package='nxg_drone',
+        executable='TargetDetection',
+        name='target_detection'
+    )
+
     msckf_node = Node(
         package='ov_msckf',
         executable='run_subscribe_msckf',
@@ -69,7 +75,7 @@ def generate_launch_description():
             {'max_cameras': 2},
             {'config_path': config_path}
         ],
-        output='both'
+        output='log'
     )
 
     realsense_share_directory = get_package_share_directory("realsense2_camera")
@@ -85,7 +91,7 @@ def generate_launch_description():
                 'enable_gyro': 'true',
                 'enable_accel': 'true',
                 'unite_imu_method': '2',
-                'enable_color': 'false',
+                'enable_color': 'true',
                 'enable_depth': 'false',
             }.items(),
         ),
@@ -101,5 +107,6 @@ def generate_launch_description():
         flight_control_node,
         robot_localization_node,
         odometry_translation_node,
-        msckf_node
+        msckf_node,
+        target_detection_node
     ])

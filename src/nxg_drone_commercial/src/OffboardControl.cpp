@@ -33,7 +33,7 @@ OffboardControl::OffboardControl(OffboardControl::OffboardControlMode mode, uint
     });
     std::chrono::duration<double> offboard_control_mode_callback_period(1.0 / this->offboard_control_mode_freq_hz);
     this->offboard_control_mode_callback_timer = this->create_wall_timer(std::chrono::duration_cast<std::chrono::milliseconds>(offboard_control_mode_callback_period), std::bind(&OffboardControl::publishOffboardControlMode, this));
-    this->offboard_controller = this->create_wall_timer(std::chrono::duration_cast<std::chrono::milliseconds>(3s), std::bind(&OffboardControl::offboardController, this));
+    //this->offboard_controller = this->create_wall_timer(std::chrono::duration_cast<std::chrono::milliseconds>(3s), std::bind(&OffboardControl::offboardController, this));
 }
 
 void OffboardControl::offboardController(void) {
@@ -152,6 +152,7 @@ void OffboardControl::publishVIO(nav_msgs::msg::Odometry msg) {
     vio_msg.angular_velocity = {(float)msg.twist.twist.angular.y, (float)msg.twist.twist.angular.x, (float)-msg.twist.twist.angular.z};
     vio_msg.position_variance = {(float)msg.pose.covariance[7], (float)msg.pose.covariance[0], (float)msg.pose.covariance[14]};
     vio_msg.velocity_variance = {(float)msg.twist.covariance[7], (float)msg.twist.covariance[0], (float)msg.twist.covariance[14]};
+    std::cout << "Velocity Variance: " << vio_msg.velocity_variance[0] << "," << vio_msg.velocity_variance[1] << "," << vio_msg.velocity_variance[2] << "\n";
     this->visual_inertial_odometry_pub->publish(vio_msg);
 }
 

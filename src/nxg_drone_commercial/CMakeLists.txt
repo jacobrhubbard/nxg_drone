@@ -19,12 +19,16 @@ find_package(cv_bridge REQUIRED)
 
 include_directories(${OpenCV_INCLUDE_DIRS})
 
-#add_executable(TargetDetection src/TargetDetection.cpp)
-#ament_target_dependencies(TargetDetection rclcpp px4_msgs OpenCV cv_bridge)
+add_executable(TargetDetection src/TargetDetection.cpp)
+ament_target_dependencies(TargetDetection rclcpp px4_msgs OpenCV cv_bridge)
 add_executable(commercial src/commercial.cpp src/OffboardControl.cpp)
 ament_target_dependencies(commercial rclcpp px4_msgs nav_msgs)
 add_executable(odometry_translate src/odometry_translate.cpp)
 ament_target_dependencies(odometry_translate rclcpp geometry_msgs nav_msgs px4_msgs)
+
+target_include_directories(TargetDetection PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
 
 target_include_directories(commercial PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -36,6 +40,9 @@ install(DIRECTORY launch
 
 install(DIRECTORY config
   DESTINATION share/${PROJECT_NAME})
+
+  install(TARGETS TargetDetection
+  DESTINATION lib/${PROJECT_NAME})
 
 install(TARGETS odometry_translate
   DESTINATION lib/${PROJECT_NAME})
