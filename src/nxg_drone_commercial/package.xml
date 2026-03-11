@@ -16,6 +16,7 @@
   <depend>px4_msgs</depend>
   <depend>open_vins</depend>
   <depend>Micro-XRCE-DDS-Agent</depend>
+  <depend>px4_ros_com</depend>
   
   <exec_depend>robot_localization</exec_depend>
   <exec_depend>ros2launch</exec_depend>
