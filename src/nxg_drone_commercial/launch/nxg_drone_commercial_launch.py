@@ -57,8 +57,8 @@ def generate_launch_description():
                 'enable_gyro': 'true',
                 'enable_accel': 'true',
                 'unite_imu_method': '2',
-                'enable_color': 'false',
-                'enable_depth': 'false',
+                'enable_color': 'true',
+                'enable_depth': 'true',
             }.items(),
         ),
         ExecuteProcess(
