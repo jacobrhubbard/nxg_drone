@@ -7,6 +7,9 @@
 #include <px4_msgs/msg/vehicle_odometry.hpp>
 #include <px4_msgs/msg/vehicle_local_position.hpp>
 #include <nav_msgs/msg/odometry.hpp>
+#include <std_msgs/msg/float64.hpp>
+
+#include <limits>
 
 class OffboardControl : public rclcpp::Node {
   public:
@@ -44,9 +47,18 @@ class OffboardControl : public rclcpp::Node {
     void arm();
     void disarm();
     void takeoff(float altitude_m = 10.0);
-    void setTrajectory(std::array<float, 3> point);
+    void setTrajectory(std::array<float, 3> point, float yaw);
     void setOffboardControlMode(OffboardControlMode mode);
   private:
+    enum class FlightState {
+      ENABLE_OFFBOARD,
+      ARM,
+      TAKEOFF,
+      MOVEMENT,
+      LANDING,
+      LANDED,
+      FINISHED
+    };
     rclcpp::TimerBase::SharedPtr offboard_control_mode_callback_timer, offboard_controller;
     rclcpp::Publisher<px4_msgs::msg::OffboardControlMode>::SharedPtr offboard_control_mode_pub;
     rclcpp::Publisher<px4_msgs::msg::TrajectorySetpoint>::SharedPtr trajectory_setpoint_pub;
@@ -57,12 +69,19 @@ class OffboardControl : public rclcpp::Node {
     rclcpp::Subscription<px4_msgs::msg::VehicleLandDetected>::SharedPtr vehicle_land_detected_sub;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr vio_sub;
     rclcpp::Subscription<px4_msgs::msg::VehicleLocalPosition>::SharedPtr vehicle_local_position_sub;
+    rclcpp::Subscription<std_msgs::msg::Float64>::SharedPtr vehicle_direction_sub;
+    rclcpp::Subscription<std_msgs::msg::Float64>::SharedPtr vehicle_distance_sub;
 
     OffboardControlMode offboard_control_mode;
     VehiclePosition vehicle_position;
     uint32_t offboard_control_mode_freq_hz;
 
     bool is_landed = true;
+    bool ready = false;
+    double radians = 0;
+    double distance = 0;
+    double distance_x = 0;
+    double distance_y = 0;
 
     px4_msgs::msg::VehicleStatus vehicle_status;
 

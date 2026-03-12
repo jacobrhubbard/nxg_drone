@@ -10,8 +10,8 @@
 #include <Eigen/Geometry>
 
 #include <functional>
-#include <limits>
 #include <chrono>
+#include <cmath>
 
 using namespace std::literals::chrono_literals;
 
@@ -42,6 +42,17 @@ OffboardControl::OffboardControl(OffboardControl::OffboardControlMode mode, uint
     this->vehicle_local_position_sub = this->create_subscription<px4_msgs::msg::VehicleLocalPosition>("/fmu/out/vehicle_local_position_v1", vehicle_local_position_qos, [this](px4_msgs::msg::VehicleLocalPosition msg) {
         this->setVehicleLocalPosition(msg);
     });
+    this->vehicle_direction_sub = this->create_subscription<std_msgs::msg::Float64>("/offboard_control/direction", 10, [this](std_msgs::msg::Float64 msg) {
+        this->radians = msg.data;
+        if (this->distance != 0) {
+            this->distance_x = std::cos(this->radians) * this->distance;
+            this->distance_y = std::sin(this->radians) * this->distance;
+            this->ready = true;
+        }
+    });
+    this->vehicle_distance_sub = this->create_subscription<std_msgs::msg::Float64>("/offboard_control/distance", 10, [this](std_msgs::msg::Float64 msg) {
+        this->distance = msg.data;
+    });
     std::chrono::duration<double> offboard_control_mode_callback_period(1.0 / this->offboard_control_mode_freq_hz);
     this->offboard_control_mode_callback_timer = this->create_wall_timer(std::chrono::duration_cast<std::chrono::milliseconds>(offboard_control_mode_callback_period), std::bind(&OffboardControl::publishOffboardControlMode, this));
     this->offboard_controller = this->create_wall_timer(std::chrono::duration_cast<std::chrono::milliseconds>(3s), std::bind(&OffboardControl::offboardController, this));
@@ -62,50 +73,56 @@ void OffboardControl::setVehicleLocalPosition(px4_msgs::msg::VehicleLocalPositio
 }
 
 void OffboardControl::offboardController(void) {
-    static int counter = 0;
-    if (counter == 0) {
-        std::cout << "Enabling Offboard Control\n";
-        this->enableOffboardControl();
-    }
-    float distance_to_go = 10.0f;
-    if (counter == 2) {
-        std::cout << "Arming\n";
-        this->arm();
-    }
-    static char state = 0;
+    static OffboardControl::FlightState state = OffboardControl::FlightState::ENABLE_OFFBOARD;
+    return;
     switch (state) {
-        case 0:
-            if (this->isArmed()) {
-                std::cout << "Takeoff\n";
-                this->setTrajectory(std::array<float, 3>{0, 0, -10});
-                state = 1;
+        case OffboardControl::FlightState::ENABLE_OFFBOARD:
+            if (this->vehicle_status.nav_state == px4_msgs::msg::VehicleStatus::NAVIGATION_STATE_OFFBOARD) {
+                state = OffboardControl::FlightState::ARM;
+            } else {
+                std::cout << "Enabling Offboard Control\n";
+                this->enableOffboardControl();
             }
             break;
-        case 1:
+        case OffboardControl::FlightState::ARM:
+            if (this->ready) {
+                std::cout << "Arming\n";
+                //this->arm();
+                state = OffboardControl::FlightState::TAKEOFF;
+            }
+            break;
+        case OffboardControl::FlightState::TAKEOFF:
+            if (this->isArmed()) {
+                std::cout << "Taking Off\n";
+                this->setTrajectory(std::array<float, 3>{0.0f, 0.0f, -10.0f}, radians);
+                state = OffboardControl::FlightState::MOVEMENT;
+            }
+            break;
+        case OffboardControl::FlightState::MOVEMENT:
             if (this->inBounds(this->vehicle_position.z_m, -10.0f, 0.2f)) {
                 std::cout << "Moving\n";
-                this->setTrajectory(std::array<float, 3>{distance_to_go, 0, -10});
-                state = 2;
+                this->setTrajectory(std::array<float, 3>{static_cast<float>(distance_x), static_cast<float>(distance_y), -10.0f}, radians);
+                state = OffboardControl::FlightState::LANDING;
             }
             break;
-        case 2:
-            if (this->inBounds(this->vehicle_position.x_m, distance_to_go, 0.5f)) {
+        case OffboardControl::FlightState::LANDING:
+            if (this->inBounds(static_cast<double>(this->vehicle_position.x_m), distance_x, 0.5) && this->inBounds(static_cast<double>(this->vehicle_position.y_m), distance_y, 0.5)) {
                 std::cout << "Landing\n";
-                this->setTrajectory(std::array<float, 3>{distance_to_go, 0, 0});
-                state = 3;
+                this->land();
+                state = OffboardControl::FlightState::LANDED;
             }
             break;
-        case 3:
+        case OffboardControl::FlightState::LANDED:
             if (this->isLanded()) {
                 std::cout << "Landed\n";
+                this->disarm();
+                state = OffboardControl::FlightState::FINISHED;
             }
             break;
-        default:
-            std::cout << "Unknown State\n";
-            this->land();
+        case OffboardControl::FlightState::FINISHED:
+            std::cout << "Finished\n";
             break;
     }
-    counter++;
 }
 
 template <typename T>
@@ -147,10 +164,10 @@ void OffboardControl::takeoff(float altitude_m) {
     this->sendVehicleCommand(px4_msgs::msg::VehicleCommand::VEHICLE_CMD_NAV_TAKEOFF, 0, 0, 0, 0, 0, 0, altitude_m);
 }
 
-void OffboardControl::setTrajectory(std::array<float, 3> point) {
+void OffboardControl::setTrajectory(std::array<float, 3> point, float yaw) {
     px4_msgs::msg::TrajectorySetpoint msg;
     msg.position = {point[0], point[1], point[2]};
-    msg.yaw = 0;
+    msg.yaw = yaw;
     msg.timestamp = this->get_clock()->now().nanoseconds() / 1000;
     this->trajectory_setpoint_pub->publish(msg);
 }
