@@ -50,7 +50,9 @@ def generate_launch_description():
                 package='nxg_drone',
                 executable='commercial',
                 name='flight_control_node',
-                output='both'
+                output='both',
+                # prefix=['xterm -e'],
+                # emulate_tty=True
             )
         ]
     )

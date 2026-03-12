@@ -5,6 +5,7 @@
 #include <px4_msgs/msg/vehicle_status.hpp>
 #include <px4_msgs/msg/vehicle_land_detected.hpp>
 #include <px4_msgs/msg/vehicle_odometry.hpp>
+#include <px4_msgs/msg/vehicle_local_position.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 
 class OffboardControl : public rclcpp::Node {
@@ -24,6 +25,13 @@ class OffboardControl : public rclcpp::Node {
         FALLING,
         FLYING
     };
+
+    //NED
+    struct {
+      float x_m;
+      float y_m;
+      float z_m;
+    } typedef VehiclePosition;
 
     OffboardControl(OffboardControlMode mode = OffboardControlMode::POSITION, uint32_t offboard_control_mode_hz = 10);
 
@@ -48,9 +56,10 @@ class OffboardControl : public rclcpp::Node {
     rclcpp::Subscription<px4_msgs::msg::VehicleStatus>::SharedPtr vehicle_status_sub;
     rclcpp::Subscription<px4_msgs::msg::VehicleLandDetected>::SharedPtr vehicle_land_detected_sub;
     rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr vio_sub;
+    rclcpp::Subscription<px4_msgs::msg::VehicleLocalPosition>::SharedPtr vehicle_local_position_sub;
 
     OffboardControlMode offboard_control_mode;
-
+    VehiclePosition vehicle_position;
     uint32_t offboard_control_mode_freq_hz;
 
     bool is_landed = true;
@@ -62,6 +71,10 @@ class OffboardControl : public rclcpp::Node {
     void publishVIO(nav_msgs::msg::Odometry msg);
     void setVehicleStatus(px4_msgs::msg::VehicleStatus status);
     void setVehicleLandStatus(px4_msgs::msg::VehicleLandDetected status);
+    void setVehicleLocalPosition(px4_msgs::msg::VehicleLocalPosition msg);
+
+    template <typename T>
+    bool inBounds(T value, T target, T bound);
 
     void offboardController(void);
 };

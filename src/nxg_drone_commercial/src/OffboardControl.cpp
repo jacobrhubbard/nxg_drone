@@ -24,7 +24,7 @@ OffboardControl::OffboardControl(OffboardControl::OffboardControlMode mode, uint
     rclcpp::QoS vehicle_status_qos(10);
     vehicle_status_qos.reliability(RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT);
     vehicle_status_qos.durability(RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL);
-    this->vehicle_status_sub = this->create_subscription<px4_msgs::msg::VehicleStatus>("/fmu/out/vehicle_status_v1", vehicle_status_qos, [this](px4_msgs::msg::VehicleStatus msg) {
+    this->vehicle_status_sub = this->create_subscription<px4_msgs::msg::VehicleStatus>("/fmu/out/vehicle_status_v2", vehicle_status_qos, [this](px4_msgs::msg::VehicleStatus msg) {
         this->setVehicleStatus(msg);
     });
     rclcpp::QoS vehicle_land_detected_qos(10);
@@ -36,9 +36,29 @@ OffboardControl::OffboardControl(OffboardControl::OffboardControlMode mode, uint
     this->vio_sub = this->create_subscription<nav_msgs::msg::Odometry>("/odomimu", 10, [this](nav_msgs::msg::Odometry msg) {
         this->publishVIO(msg);
     });
+    rclcpp::QoS vehicle_local_position_qos(10);
+    vehicle_local_position_qos.reliability(RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT);
+    vehicle_local_position_qos.durability(RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL);
+    this->vehicle_local_position_sub = this->create_subscription<px4_msgs::msg::VehicleLocalPosition>("/fmu/out/vehicle_local_position_v1", vehicle_local_position_qos, [this](px4_msgs::msg::VehicleLocalPosition msg) {
+        this->setVehicleLocalPosition(msg);
+    });
     std::chrono::duration<double> offboard_control_mode_callback_period(1.0 / this->offboard_control_mode_freq_hz);
     this->offboard_control_mode_callback_timer = this->create_wall_timer(std::chrono::duration_cast<std::chrono::milliseconds>(offboard_control_mode_callback_period), std::bind(&OffboardControl::publishOffboardControlMode, this));
     this->offboard_controller = this->create_wall_timer(std::chrono::duration_cast<std::chrono::milliseconds>(3s), std::bind(&OffboardControl::offboardController, this));
+}
+
+void OffboardControl::setVehicleLocalPosition(px4_msgs::msg::VehicleLocalPosition msg) {
+    if (!msg.xy_valid) {
+        std::cout << "XY Position Invalid\n";
+        return;
+    }
+    if (!msg.z_valid) {
+        std::cout << "Z Position Invalid\n";
+        return;
+    }
+    this->vehicle_position.x_m = msg.x;
+    this->vehicle_position.y_m = msg.y;
+    this->vehicle_position.z_m = msg.z;
 }
 
 void OffboardControl::offboardController(void) {
@@ -46,41 +66,51 @@ void OffboardControl::offboardController(void) {
     if (counter == 0) {
         std::cout << "Enabling Offboard Control\n";
         this->enableOffboardControl();
-    } else if (counter == 1) {
+    }
+    float distance_to_go = 10.0f;
+    if (counter == 2) {
         std::cout << "Arming\n";
         this->arm();
     }
-    // } else if (counter == 2) {
-    //     std::cout << "Takeoff\n";
-    //     this->setTrajectory(std::array<float, 3>{0, 0, -10});
-    // } else if (counter % 3) {
-    //     this->setTrajectory(std::array<float, 3>{10, 0, -10});
-    // } else {
-    //     this->setTrajectory(std::array<float, 3>{-10, 0, -10});
-    // }
+    static char state = 0;
+    switch (state) {
+        case 0:
+            if (this->isArmed()) {
+                std::cout << "Takeoff\n";
+                this->setTrajectory(std::array<float, 3>{0, 0, -10});
+                state = 1;
+            }
+            break;
+        case 1:
+            if (this->inBounds(this->vehicle_position.z_m, -10.0f, 0.2f)) {
+                std::cout << "Moving\n";
+                this->setTrajectory(std::array<float, 3>{distance_to_go, 0, -10});
+                state = 2;
+            }
+            break;
+        case 2:
+            if (this->inBounds(this->vehicle_position.x_m, distance_to_go, 0.5f)) {
+                std::cout << "Landing\n";
+                this->setTrajectory(std::array<float, 3>{distance_to_go, 0, 0});
+                state = 3;
+            }
+            break;
+        case 3:
+            if (this->isLanded()) {
+                std::cout << "Landed\n";
+            }
+            break;
+        default:
+            std::cout << "Unknown State\n";
+            this->land();
+            break;
+    }
     counter++;
-    // switch(counter) {
-    //     case 1:
-    //         std::cout << "Enabling Offboard Control\n";
-    //         this->enableOffboardControl();
-    //         break;
-    //     case 0:
-    //         std::cout << "Arming\n";
-    //         this->arm();
-    //         break;
-    //     case 2:
-    //         std::cout << "Takeoff\n";
-    //         this->setTrajectory(std::array<float, 3>{0, 0, -10});
-    //         break;
-    //     case 8:
-    //         std::cout << "Landing\n";
-    //         this->land();
-    //         break;
-    //     default:
-    //         std::cout << "Im Finished\n";
-    //         break;
-    // }
-    // counter++;
+}
+
+template <typename T>
+bool OffboardControl::inBounds(T value, T target, T bound) {
+    return (value >= (target - bound)) && (value <= (target + bound));
 }
 
 void OffboardControl::setOffboardControlMode(OffboardControl::OffboardControlMode mode) {
@@ -168,7 +198,7 @@ void OffboardControl::publishVIO(nav_msgs::msg::Odometry msg) {
     Eigen::Vector3d ned_linear_velocity = px4_ros_com::frame_transforms::enu_to_ned_local_frame(linear_velocity);
     Eigen::Vector3d angular_velocity = Eigen::Vector3d(msg.twist.twist.angular.x, msg.twist.twist.angular.y, msg.twist.twist.angular.z);
     Eigen::Vector3d ned_angular_velocity = px4_ros_com::frame_transforms::enu_to_ned_local_frame(angular_velocity);
-    vio_msg.q = {ned_orientation.w, ned_orientation.x, ned_orientation.y, ned_orientation.z};
+    vio_msg.q = {ned_orientation.w(), ned_orientation.x(), ned_orientation.y(), ned_orientation.z()};
     vio_msg.position = {ned_position.x(), ned_position.y(), ned_position.z()};
     vio_msg.velocity_frame = 1;     //NED
     vio_msg.velocity = {ned_linear_velocity.x(), ned_linear_velocity.y(), ned_linear_velocity.z()};
