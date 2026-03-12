@@ -33,7 +33,7 @@ OffboardControl::OffboardControl(OffboardControl::OffboardControlMode mode, uint
     this->vehicle_land_detected_sub = this->create_subscription<px4_msgs::msg::VehicleLandDetected>("/fmu/out/vehicle_land_detected", vehicle_land_detected_qos, [this](px4_msgs::msg::VehicleLandDetected msg) {
         this->setVehicleLandStatus(msg);
     });
-    this->vio_sub = this->create_subscription<nav_msgs::msg::Odometry>("/odomimu", 10, [this](nav_msgs::msg::Odometry msg) {
+    this->vio_sub = this->create_subscription<nav_msgs::msg::Odometry>("/odomimu", 50, [this](nav_msgs::msg::Odometry msg) {
         this->publishVIO(msg);
     });
     rclcpp::QoS vehicle_local_position_qos(10);

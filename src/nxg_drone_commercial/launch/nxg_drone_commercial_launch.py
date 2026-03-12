@@ -59,6 +59,8 @@ def generate_launch_description():
                 'unite_imu_method': '2',
                 'enable_color': 'true',
                 'enable_depth': 'true',
+                'accel_fps': '200',
+                'gyro_fps': '200',
             }.items(),
         ),
         ExecuteProcess(
