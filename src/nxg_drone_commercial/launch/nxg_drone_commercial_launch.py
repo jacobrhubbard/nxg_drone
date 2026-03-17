@@ -44,6 +44,14 @@ def generate_launch_description():
         output='both'
     )
 
+    command_interface_node = Node(
+        package='nxg_drone',
+        executable='command_interface',
+        name='flight_command_interface',
+        prefix=['xterm -e'],
+        emulate_tty=True,
+    )
+
     realsense_share_directory = get_package_share_directory("realsense2_camera")
     depth_camera_launch_file = os.path.join(realsense_share_directory, "launch", "rs_launch.py")
 
@@ -71,5 +79,6 @@ def generate_launch_description():
         ),
         flight_control_node,
         odometry_translation_node,
-        msckf_node
+        msckf_node,
+        command_interface_node,
     ])

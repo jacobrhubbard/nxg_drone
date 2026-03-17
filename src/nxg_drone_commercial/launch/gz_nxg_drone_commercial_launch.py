@@ -51,10 +51,16 @@ def generate_launch_description():
                 executable='commercial',
                 name='flight_control_node',
                 output='both',
-                # prefix=['xterm -e'],
-                # emulate_tty=True
             )
         ]
+    )
+
+    command_interface_node = Node(
+        package='nxg_drone',
+        executable='command_interface',
+        name='flight_command_interface',
+        prefix=['xterm -e'],
+        emulate_tty=True,
     )
 
     odometry_translation_node = Node(
