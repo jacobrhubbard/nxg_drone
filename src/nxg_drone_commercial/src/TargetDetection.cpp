@@ -25,16 +25,16 @@ TargetDetection::TargetDetection(void) : Node("target_detection") {
             return;
         }
         cv::Mat image = cv_ptr->image;
-        cv::Mat annotated_image;
-        std::vector<cv::Rect> detection_results = this->findWhiteBoxes(image, annotated_image);
-        geometry_msgs::msg::Point point_result;
-        for (cv::Rect result : detection_results) {
-            geometry_msgs::msg::Point point;
-            point.x = static_cast<double>(result.x) + (static_cast<double>(result.width) / 2.0);
-            point.y = static_cast<double>(result.y) + (static_cast<double>(result.height) / 2.0);
-            this->detection_results_pub->publish(point);
-        }
-        writer.write(annotated_image);
+        // cv::Mat annotated_image;
+        // std::vector<cv::Rect> detection_results = this->findWhiteBoxes(image, annotated_image);
+        // geometry_msgs::msg::Point point_result;
+        // for (cv::Rect result : detection_results) {
+        //     geometry_msgs::msg::Point point;
+        //     point.x = static_cast<double>(result.x) + (static_cast<double>(result.width) / 2.0);
+        //     point.y = static_cast<double>(result.y) + (static_cast<double>(result.height) / 2.0);
+        //     this->detection_results_pub->publish(point);
+        // }
+        writer.write(image);
     });
 }
 
