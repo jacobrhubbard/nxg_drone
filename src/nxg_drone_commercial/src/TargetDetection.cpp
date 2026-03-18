@@ -34,11 +34,6 @@ TargetDetection::TargetDetection(void) : Node("target_detection") {
             point.y = static_cast<double>(result.y) + (static_cast<double>(result.height) / 2.0);
             this->detection_results_pub->publish(point);
         }
-        // std_msgs::msg::Header header;
-        // header.stamp = this->get_clock()->now();
-        // header.frame_id = "camera";
-        // sensor_msgs::msg::Image::SharedPtr annotated_msg = cv_bridge::CvImage(header, "rgb8", annotated_image).toImageMsg();
-        // this->annotated_image_pub->publish(*annotated_msg);
         writer.write(annotated_image);
     });
 }

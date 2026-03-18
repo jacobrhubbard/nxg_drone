@@ -27,6 +27,13 @@ def generate_launch_description():
         ]
     )
 
+    target_detection_node = Node(
+        package='nxg_drone',
+        executable='TargetDetection',
+        name='target_detection'
+        output='log',
+    )
+
     odometry_translation_node = Node(
         package='nxg_drone',
         executable='odometry_translate',
@@ -73,5 +80,6 @@ def generate_launch_description():
         ),
         flight_control_node,
         odometry_translation_node,
-        msckf_node
+        msckf_node,
+        target_detection_node
     ])
