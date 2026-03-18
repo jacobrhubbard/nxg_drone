@@ -21,6 +21,12 @@ OffboardControl::OffboardControl(OffboardControl::OffboardControlMode mode, uint
     this->vehicle_command_pub = this->create_publisher<px4_msgs::msg::VehicleCommand>("/fmu/in/vehicle_command", 10);
     this->visual_inertial_odometry_pub = this->create_publisher<px4_msgs::msg::VehicleOdometry>("/fmu/in/vehicle_visual_odometry", 10);
 
+    auto param_client = std::make_shared<rclcpp::SyncParametersClient>(this, "camera/camera");
+    param_client->wait_for_service(1s);
+    param_client->set_parameters({
+        rclcpp::Parameter("depth_module.emitter_enabled", 0)
+    });
+
     rclcpp::QoS vehicle_status_qos(10);
     vehicle_status_qos.reliability(RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT);
     vehicle_status_qos.durability(RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL);
