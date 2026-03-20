@@ -27,6 +27,13 @@ def generate_launch_description():
         ]
     )
 
+    target_detection_node = Node(
+        package='nxg_drone',
+        executable='TargetDetection',
+        name='target_detection'
+        output='log',
+    )
+
     odometry_translation_node = Node(
         package='nxg_drone',
         executable='odometry_translate',
@@ -39,7 +46,9 @@ def generate_launch_description():
         parameters = [
             {'use_stereo': True},
             {'max_cameras': 2},
-            {'config_path': config_path}
+            {'config_path': config_path},
+            {'queue_size_imu': 100},
+            {'queue_size_camera': 50}
         ],
         output='both'
     )
@@ -59,16 +68,16 @@ def generate_launch_description():
         IncludeLaunchDescription(
             depth_camera_launch_file,
             launch_arguments={
-                'enable_sync': 'true',
                 'enable_infra1': 'true',
                 'enable_infra2': 'true',
                 'enable_gyro': 'true',
                 'enable_accel': 'true',
+                'enable_depth': 'false',
+                'gyro_fps': '400',
+                'accel_fps': '200',
                 'unite_imu_method': '2',
                 'enable_color': 'true',
-                'enable_depth': 'true',
-                'accel_fps': '200',
-                'gyro_fps': '200',
+                'depth_module.infra_profile': '848x480x30',
             }.items(),
         ),
         ExecuteProcess(
@@ -81,4 +90,5 @@ def generate_launch_description():
         odometry_translation_node,
         msckf_node,
         command_interface_node,
+        target_detection_node,
     ])

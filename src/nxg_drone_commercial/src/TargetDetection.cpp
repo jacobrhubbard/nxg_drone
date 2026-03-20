@@ -11,7 +11,7 @@ TargetDetection::TargetDetection(void) : Node("target_detection") {
     this->detection_results_pub = this->create_publisher<geometry_msgs::msg::Point>("/target_detection/point", 10);
     this->annotated_image_pub = this->create_publisher<sensor_msgs::msg::Image>("target_detection/annotated", 10);
     int codec = cv::VideoWriter::fourcc('m', 'p', '4', 'v');
-    this->writer = cv::VideoWriter("output.mp4", codec, 15.0, cv::Size(640,480));
+    this->writer = cv::VideoWriter("output.mp4", codec, 30.0, cv::Size(640,480));
     if (!writer.isOpened()) {
         std::cerr << "Error video writer\n";
         return;
@@ -34,11 +34,6 @@ TargetDetection::TargetDetection(void) : Node("target_detection") {
             point.y = static_cast<double>(result.y) + (static_cast<double>(result.height) / 2.0);
             this->detection_results_pub->publish(point);
         }
-        // std_msgs::msg::Header header;
-        // header.stamp = this->get_clock()->now();
-        // header.frame_id = "camera";
-        // sensor_msgs::msg::Image::SharedPtr annotated_msg = cv_bridge::CvImage(header, "rgb8", annotated_image).toImageMsg();
-        // this->annotated_image_pub->publish(*annotated_msg);
         writer.write(annotated_image);
     });
 }

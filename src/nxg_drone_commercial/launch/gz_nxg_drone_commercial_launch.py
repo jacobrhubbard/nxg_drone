@@ -73,6 +73,7 @@ def generate_launch_description():
         package='nxg_drone',
         executable='TargetDetection',
         name='target_detection'
+        output='log',
     )
 
     msckf_node = Node(
@@ -83,7 +84,7 @@ def generate_launch_description():
             {'max_cameras': 2},
             {'config_path': config_path}
         ],
-        output='log'
+        output='both'
     )
 
     realsense_share_directory = get_package_share_directory("realsense2_camera")
@@ -93,14 +94,16 @@ def generate_launch_description():
         IncludeLaunchDescription(
             depth_camera_launch_file,
             launch_arguments={
-                'enable_sync': 'true',
                 'enable_infra1': 'true',
                 'enable_infra2': 'true',
                 'enable_gyro': 'true',
                 'enable_accel': 'true',
+                'enable_depth': 'false',
+                'gyro_fps': '400',
+                'accel_fps': '200',
                 'unite_imu_method': '2',
                 'enable_color': 'true',
-                'enable_depth': 'false',
+                'depth_module.infra_profile': '848x480x30',
             }.items(),
         ),
         bridge_node,
@@ -116,5 +119,6 @@ def generate_launch_description():
         robot_localization_node,
         odometry_translation_node,
         msckf_node,
-        target_detection_node
+        target_detection_node,
+        command_interface_node,
     ])
