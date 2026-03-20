@@ -43,7 +43,6 @@ def generate_launch_description():
     msckf_node = Node(
         package='ov_msckf',
         executable='run_subscribe_msckf',
-        namespace='ov_msckf',
         parameters = [
             {'use_stereo': True},
             {'max_cameras': 2},
