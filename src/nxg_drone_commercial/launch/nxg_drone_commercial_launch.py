@@ -30,7 +30,7 @@ def generate_launch_description():
     target_detection_node = Node(
         package='nxg_drone',
         executable='TargetDetection',
-        name='target_detection'
+        name='target_detection',
         output='log',
     )
 
@@ -69,7 +69,7 @@ def generate_launch_description():
                 'accel_fps': '200',
                 'unite_imu_method': '2',
                 'enable_color': 'true',
-                'depth_module.infra_profile': '848x480x90',
+                'depth_module.infra_profile': '848x480x30',
             }.items(),
         ),
         ExecuteProcess(
