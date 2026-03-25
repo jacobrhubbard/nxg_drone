@@ -16,7 +16,7 @@ def generate_launch_description():
         robot_description = fp.read()
 
     flight_control_node = TimerAction(
-        period=10.0,
+        period=15.0,
         actions=[
             Node (
                 package='nxg_drone',
@@ -43,14 +43,15 @@ def generate_launch_description():
     msckf_node = Node(
         package='ov_msckf',
         executable='run_subscribe_msckf',
+        namespace='ov_msckf',
         parameters = [
             {'use_stereo': True},
             {'max_cameras': 2},
             {'config_path': config_path},
-            {'queue_size_imu': 100},
-            {'queue_size_camera': 50}
+            {'queue_size_imu': 20},
+            {'queue_size_camera': 20},
         ],
-        output='both'
+        output='both',
     )
 
     realsense_share_directory = get_package_share_directory("realsense2_camera")
@@ -69,7 +70,7 @@ def generate_launch_description():
                 'accel_fps': '200',
                 'unite_imu_method': '2',
                 'enable_color': 'true',
-                'depth_module.infra_profile': '848x480x30',
+                'depth_module.infra_profile': '848x480x60',
             }.items(),
         ),
         ExecuteProcess(

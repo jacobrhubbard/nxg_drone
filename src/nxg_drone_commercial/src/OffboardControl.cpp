@@ -39,7 +39,7 @@ OffboardControl::OffboardControl(OffboardControl::OffboardControlMode mode, uint
     this->vehicle_land_detected_sub = this->create_subscription<px4_msgs::msg::VehicleLandDetected>("/fmu/out/vehicle_land_detected", vehicle_land_detected_qos, [this](px4_msgs::msg::VehicleLandDetected msg) {
         this->setVehicleLandStatus(msg);
     });
-    this->vio_sub = this->create_subscription<nav_msgs::msg::Odometry>("/odomimu", 50, [this](nav_msgs::msg::Odometry msg) {
+    this->vio_sub = this->create_subscription<nav_msgs::msg::Odometry>("/ov_msckf/odomimu", 50, [this](nav_msgs::msg::Odometry msg) {
         this->publishVIO(msg);
     });
     rclcpp::QoS vehicle_local_position_qos(10);
@@ -223,7 +223,8 @@ void OffboardControl::publishVIO(nav_msgs::msg::Odometry msg) {
     Eigen::Vector3d ned_angular_velocity = px4_ros_com::frame_transforms::enu_to_ned_local_frame(angular_velocity);
     vio_msg.q = {ned_orientation.w(), ned_orientation.x(), ned_orientation.y(), ned_orientation.z()};
     vio_msg.position = {ned_position.x(), ned_position.y(), ned_position.z()};
-    vio_msg.velocity_frame = 1;     //NED
+    vio_msg.velocity_frame = 2;
+    vio_msg.pose_frame = 2;
     vio_msg.velocity = {ned_linear_velocity.x(), ned_linear_velocity.y(), ned_linear_velocity.z()};
     vio_msg.angular_velocity = {ned_angular_velocity.x(), ned_angular_velocity.y(), ned_angular_velocity.z()};
     vio_msg.position_variance = {(float)msg.pose.covariance[7], (float)msg.pose.covariance[0], (float)msg.pose.covariance[14]};
