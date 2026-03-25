@@ -44,7 +44,7 @@ def generate_launch_description():
     )
 
     flight_control_node = TimerAction(
-        period=10.0,
+        period=15.0,
         actions=[
             Node (
                 package='nxg_drone',
@@ -97,7 +97,7 @@ def generate_launch_description():
                 'accel_fps': '200',
                 'unite_imu_method': '2',
                 'enable_color': 'true',
-                'depth_module.infra_profile': '848x480x30',
+                'depth_module.infra_profile': '848x480x60',
             }.items(),
         ),
         bridge_node,

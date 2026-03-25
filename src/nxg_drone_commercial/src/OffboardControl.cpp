@@ -80,6 +80,13 @@ void OffboardControl::setVehicleLocalPosition(px4_msgs::msg::VehicleLocalPositio
 
 void OffboardControl::offboardController(void) {
     static OffboardControl::FlightState state = OffboardControl::FlightState::ENABLE_OFFBOARD;
+<<<<<<< Updated upstream
+=======
+    if (this->ready) {
+        std::cout << "Going To: (" << this->distance_x << ", " << this->distance_y << ")\n";
+    }
+    return;
+>>>>>>> Stashed changes
     switch (state) {
         case OffboardControl::FlightState::ENABLE_OFFBOARD:
             if (this->vehicle_status.nav_state == px4_msgs::msg::VehicleStatus::NAVIGATION_STATE_OFFBOARD) {
