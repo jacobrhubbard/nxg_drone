@@ -74,7 +74,7 @@ def generate_launch_description():
             }.items(),
         ),
         ExecuteProcess(
-            cmd=[['MicroXRCEAgent serial --dev /dev/ttyAMA0 -b 921600']],
+            cmd=[['MicroXRCEAgent serial --dev /dev/ttyHS2 -b 921600']],
             shell=True,
             output='screen',
             name='micro_xrce_agent'
