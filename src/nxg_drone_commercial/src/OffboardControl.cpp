@@ -92,9 +92,10 @@ void OffboardControl::offboardController(void) {
             break;
         case OffboardControl::FlightState::ARM:
             if (this->ready) {
-                std::cout << "Arming\n";
-                //this->arm();
-                state = OffboardControl::FlightState::TAKEOFF;
+                if (this->vehicle_status.arming_state == px4_msgs::msg::VehicleStatus::ARMING_STATE_ARMED) {
+                    std::cout << "Arming\n";
+                    state = OffboardControl::FlightState::TAKEOFF;
+                }
             }
             break;
         case OffboardControl::FlightState::TAKEOFF:
