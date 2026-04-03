@@ -121,7 +121,6 @@ void OffboardControl::offboardController(void) {
         case OffboardControl::FlightState::LANDED:
             if (this->isLanded()) {
                 std::cout << "Landed\n";
-                this->disarm();
                 state = OffboardControl::FlightState::FINISHED;
             }
             break;
