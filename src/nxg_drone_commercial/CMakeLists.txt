@@ -12,6 +12,7 @@ find_package(rclcpp REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(OpenCV REQUIRED)
+find_package(OpenCL REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(px4_ros_com REQUIRED)
 # uncomment the following section in order to fill in
@@ -21,11 +22,11 @@ find_package(px4_ros_com REQUIRED)
 include_directories(${OpenCV_INCLUDE_DIRS})
 
 add_executable(TargetDetection src/TargetDetection.cpp)
-ament_target_dependencies(TargetDetection rclcpp px4_msgs OpenCV cv_bridge)
+ament_target_dependencies(TargetDetection rclcpp px4_msgs OpenCV cv_bridge OpenCL)
 add_executable(commercial src/commercial.cpp src/OffboardControl.cpp)
-ament_target_dependencies(commercial rclcpp px4_msgs nav_msgs px4_ros_com)
+ament_target_dependencies(commercial rclcpp px4_msgs nav_msgs px4_ros_com OpenCL)
 add_executable(odometry_translate src/odometry_translate.cpp)
-ament_target_dependencies(odometry_translate rclcpp geometry_msgs nav_msgs px4_msgs)
+ament_target_dependencies(odometry_translate rclcpp geometry_msgs nav_msgs px4_msgs OpenCL)
 
 target_include_directories(TargetDetection PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
