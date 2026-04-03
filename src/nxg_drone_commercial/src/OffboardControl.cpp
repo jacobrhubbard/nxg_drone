@@ -30,7 +30,7 @@ OffboardControl::OffboardControl(OffboardControl::OffboardControlMode mode, uint
     rclcpp::QoS vehicle_status_qos(10);
     vehicle_status_qos.reliability(RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT);
     vehicle_status_qos.durability(RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL);
-    this->vehicle_status_sub = this->create_subscription<px4_msgs::msg::VehicleStatus>("/fmu/out/vehicle_status_v2", vehicle_status_qos, [this](px4_msgs::msg::VehicleStatus msg) {
+    this->vehicle_status_sub = this->create_subscription<px4_msgs::msg::VehicleStatus>("/fmu/out/vehicle_status_v1", vehicle_status_qos, [this](px4_msgs::msg::VehicleStatus msg) {
         this->setVehicleStatus(msg);
     });
     rclcpp::QoS vehicle_land_detected_qos(10);
@@ -45,7 +45,7 @@ OffboardControl::OffboardControl(OffboardControl::OffboardControlMode mode, uint
     rclcpp::QoS vehicle_local_position_qos(10);
     vehicle_local_position_qos.reliability(RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT);
     vehicle_local_position_qos.durability(RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL);
-    this->vehicle_local_position_sub = this->create_subscription<px4_msgs::msg::VehicleLocalPosition>("/fmu/out/vehicle_local_position_v1", vehicle_local_position_qos, [this](px4_msgs::msg::VehicleLocalPosition msg) {
+    this->vehicle_local_position_sub = this->create_subscription<px4_msgs::msg::VehicleLocalPosition>("/fmu/out/vehicle_local_position", vehicle_local_position_qos, [this](px4_msgs::msg::VehicleLocalPosition msg) {
         this->setVehicleLocalPosition(msg);
     });
     this->vehicle_direction_sub = this->create_subscription<std_msgs::msg::Float64>("/offboard_control/direction", 10, [this](std_msgs::msg::Float64 msg) {
@@ -100,14 +100,14 @@ void OffboardControl::offboardController(void) {
         case OffboardControl::FlightState::TAKEOFF:
             if (this->isArmed()) {
                 std::cout << "Taking Off\n";
-                this->setTrajectory(std::array<float, 3>{0.0f, 0.0f, -10.0f}, radians);
+                this->setTrajectory(std::array<float, 3>{0.0f, 0.0f, -3.5f}, radians);
                 state = OffboardControl::FlightState::MOVEMENT;
             }
             break;
         case OffboardControl::FlightState::MOVEMENT:
-            if (this->inBounds(this->vehicle_position.z_m, -10.0f, 0.2f)) {
+            if (this->inBounds(this->vehicle_position.z_m, -3.5f, 0.2f)) {
                 std::cout << "Moving\n";
-                this->setTrajectory(std::array<float, 3>{static_cast<float>(distance_x), static_cast<float>(distance_y), -10.0f}, radians);
+                this->setTrajectory(std::array<float, 3>{static_cast<float>(distance_x), static_cast<float>(distance_y), -3.5f}, radians);
                 state = OffboardControl::FlightState::LANDING;
             }
             break;
