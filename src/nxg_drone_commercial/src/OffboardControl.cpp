@@ -210,8 +210,8 @@ void OffboardControl::publishVIO(nav_msgs::msg::Odometry msg) {
     Eigen::Vector3d ned_angular_velocity = px4_ros_com::frame_transforms::enu_to_ned_local_frame(angular_velocity);
     vio_msg.q = {ned_orientation.w(), ned_orientation.x(), ned_orientation.y(), ned_orientation.z()};
     vio_msg.position = {ned_position.x(), ned_position.y(), ned_position.z()};
-    vio_msg.velocity_frame = 2;
-    vio_msg.pose_frame = 2;
+    vio_msg.velocity_frame = px4_msgs::msg::VehicleOdometry::VELOCITY_FRAME_BODY_FRD;
+    vio_msg.pose_frame = px4_msgs::msg::VehicleOdometry::POSE_FRAME_FRD;
     vio_msg.velocity = {ned_linear_velocity.x(), ned_linear_velocity.y(), ned_linear_velocity.z()};
     vio_msg.angular_velocity = {ned_angular_velocity.x(), ned_angular_velocity.y(), ned_angular_velocity.z()};
     vio_msg.position_variance = {(float)msg.pose.covariance[7], (float)msg.pose.covariance[0], (float)msg.pose.covariance[14]};
