@@ -200,19 +200,6 @@ void OffboardControl::sendVehicleCommand(uint16_t command, float param_1, float 
 //Takes OpenVINS VIO Messages and Translates to PX4 VehicleOdometry
 void OffboardControl::publishVIO(nav_msgs::msg::Odometry msg) {
     px4_msgs::msg::VehicleOdometry vio_msg;
-    //vio_msg.timestamp = ((uint32_t)(msg.header.stamp.sec) * 1e6) + ((uint32_t)(msg.header.stamp.nsec) / 1000);
-    // vio_msg.timestamp = this->get_clock()->now().nanoseconds() / 1000;
-    // vio_msg.timestamp_sample = vio_msg.timestamp;
-    // vio_msg.pose_frame = 1;   //NED
-    // vio_msg.q = {std::numeric_limits<float>::signaling_NaN(), std::numeric_limits<float>::signaling_NaN(), std::numeric_limits<float>::signaling_NaN(), std::numeric_limits<float>::signaling_NaN()};
-    // vio_msg.position = {(float)msg.pose.pose.position.y, (float)msg.pose.pose.position.x, (float)-msg.pose.pose.position.z};
-    // vio_msg.velocity_frame = 1;     //NED
-    // vio_msg.velocity = {(float)msg.twist.twist.linear.y, (float)msg.twist.twist.linear.x, (float)-msg.twist.twist.linear.z};
-    // vio_msg.angular_velocity = {(float)msg.twist.twist.angular.y, (float)msg.twist.twist.angular.x, (float)-msg.twist.twist.angular.z};
-    // vio_msg.position_variance = {(float)msg.pose.covariance[7], (float)msg.pose.covariance[0], (float)msg.pose.covariance[14]};
-    // vio_msg.velocity_variance = {(float)msg.twist.covariance[7], (float)msg.twist.covariance[0], (float)msg.twist.covariance[14]};
-    // std::cout << "Velocity Variance: " << vio_msg.velocity_variance[0] << "," << vio_msg.velocity_variance[1] << "," << vio_msg.velocity_variance[2] << "\n";
-    // this->visual_inertial_odometry_pub->publish(vio_msg);
     Eigen::Quaterniond orientation = Eigen::Quaterniond(msg.pose.pose.orientation.w, msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z);
     Eigen::Quaterniond ned_orientation = px4_ros_com::frame_transforms::enu_to_ned_orientation(px4_ros_com::frame_transforms::baselink_to_aircraft_orientation(orientation));
     Eigen::Vector3d position = Eigen::Vector3d(msg.pose.pose.position.x, msg.pose.pose.position.y, msg.pose.pose.position.z);
@@ -230,7 +217,10 @@ void OffboardControl::publishVIO(nav_msgs::msg::Odometry msg) {
     vio_msg.position_variance = {(float)msg.pose.covariance[7], (float)msg.pose.covariance[0], (float)msg.pose.covariance[14]};
     vio_msg.velocity_variance = {(float)msg.twist.covariance[7], (float)msg.twist.covariance[0], (float)msg.twist.covariance[14]};
     vio_msg.orientation_variance = {(float)msg.pose.covariance[28], (float)msg.pose.covariance[21], (float)msg.pose.covariance[35]};
-    vio_msg.timestamp = vio_msg.timestamp = this->get_clock()->now().nanoseconds() / 1000;
+    vio_msg.timestamp = (msg.header.stamp.sec * 1000000) + (msg.header.stamp.nanosec / 1000);
+    vio_msg.timestamp_sample = vio_msg.timestamp;
+    vio_msg.reset_counter = 0;
+    vio_msg.quality = 0;
     this->visual_inertial_odometry_pub->publish(vio_msg);
 }
 
