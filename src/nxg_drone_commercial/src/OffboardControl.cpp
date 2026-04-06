@@ -219,6 +219,8 @@ void OffboardControl::publishVIO(nav_msgs::msg::Odometry msg) {
     vio_msg.orientation_variance = {(float)msg.pose.covariance[28], (float)msg.pose.covariance[21], (float)msg.pose.covariance[35]};
     vio_msg.timestamp = (msg.header.stamp.sec * 1000000) + (msg.header.stamp.nanosec / 1000);
     vio_msg.timestamp_sample = vio_msg.timestamp;
+    uint64_t prev_time = this->get_clock()->now().nanoseconds() / 1000;
+    printf("Timeoffset: %ul\n", prev_time - vio_msg.timestamp);
     vio_msg.reset_counter = 0;
     vio_msg.quality = 0;
     this->visual_inertial_odometry_pub->publish(vio_msg);
