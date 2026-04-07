@@ -201,7 +201,8 @@ void OffboardControl::sendVehicleCommand(uint16_t command, float param_1, float 
 void OffboardControl::publishVIO(nav_msgs::msg::Odometry msg) {
     px4_msgs::msg::VehicleOdometry vio_msg;
     Eigen::Quaterniond orientation = Eigen::Quaterniond(msg.pose.pose.orientation.w, msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z);
-    Eigen::Quaterniond ned_orientation = px4_ros_com::frame_transforms::enu_to_ned_orientation(px4_ros_com::frame_transforms::baselink_to_aircraft_orientation(orientation));
+    //Eigen::Quaterniond ned_orientation = px4_ros_com::frame_transforms::enu_to_ned_orientation(px4_ros_com::frame_transforms::baselink_to_aircraft_orientation(orientation));
+    Eigen::Quaterniond ned_orientation = px4_ros_com::frame_transforms::ros_to_px4_orientation(orientation);
     Eigen::Vector3d position = Eigen::Vector3d(msg.pose.pose.position.x, msg.pose.pose.position.y, msg.pose.pose.position.z);
     Eigen::Vector3d ned_position = px4_ros_com::frame_transforms::enu_to_ned_local_frame(position);
     Eigen::Vector3d linear_velocity = Eigen::Vector3d(msg.twist.twist.linear.x, msg.twist.twist.linear.y, msg.twist.twist.linear.z);
