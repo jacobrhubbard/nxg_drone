@@ -209,8 +209,8 @@ void OffboardControl::publishVIO(nav_msgs::msg::Odometry msg) {
     Eigen::Vector3d ned_linear_velocity = px4_ros_com::frame_transforms::enu_to_ned_local_frame(linear_velocity);
     Eigen::Vector3d angular_velocity = Eigen::Vector3d(msg.twist.twist.angular.x, msg.twist.twist.angular.y, msg.twist.twist.angular.z);
     Eigen::Vector3d ned_angular_velocity = px4_ros_com::frame_transforms::enu_to_ned_local_frame(angular_velocity);
-    vio_msg.q = {ned_orientation.w(), ned_orientation.x(), ned_orientation.y(), ned_orientation.z()};
-    vio_msg.position = {ned_position.x(), ned_position.y(), ned_position.z()};
+    vio_msg.q = {static_cast<float>(-ned_orientation.w()), static_cast<float>(-ned_orientation.x()), static_cast<float>(ned_orientation.y()), static_cast<float>(ned_orientation.z())};
+    vio_msg.position = {static_cast<float>(ned_position.x()), static_cast<float>(ned_position.y()), static_cast<float>(ned_position.z())};
     vio_msg.velocity_frame = px4_msgs::msg::VehicleOdometry::VELOCITY_FRAME_BODY_FRD;
     vio_msg.pose_frame = px4_msgs::msg::VehicleOdometry::POSE_FRAME_FRD;
     vio_msg.velocity = {ned_linear_velocity.x(), ned_linear_velocity.y(), ned_linear_velocity.z()};
