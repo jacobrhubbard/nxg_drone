@@ -54,6 +54,27 @@ def generate_launch_description():
         output='log',
     )
 
+    rplidar_node = Node(
+        package='rplidar_ros',
+        executable='rplidar_node',
+        name='rplidar_node',
+        namespace='rplidar_a2m12',
+        parameters=[{
+            'channel_type': 'serial',
+            'serial_port': '/dev/ttyUSB0',
+            'serial_baudrate': 256000,
+            'frame_id': 'laser',
+            'angle_compensate': True}],
+        output='both'
+    )
+
+    translation_node = Node(
+        package='nxg_drone',
+        executable='px4_translation',
+        name='px4_translation',
+        output='screen'
+    )
+
     realsense_share_directory = get_package_share_directory("realsense2_camera")
     depth_camera_launch_file = os.path.join(realsense_share_directory, "launch", "rs_launch.py")
 
@@ -81,5 +102,7 @@ def generate_launch_description():
         flight_control_node,
         odometry_translation_node,
         msckf_node,
-        target_detection_node
+        target_detection_node,
+        rplidar_node,
+        translation_node
     ])

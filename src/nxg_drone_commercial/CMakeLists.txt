@@ -15,6 +15,7 @@ find_package(OpenCV REQUIRED)
 find_package(OpenCL REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(px4_ros_com REQUIRED)
+find_package(std_msgs REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
@@ -27,6 +28,8 @@ add_executable(commercial src/commercial.cpp src/OffboardControl.cpp)
 ament_target_dependencies(commercial rclcpp px4_msgs nav_msgs px4_ros_com OpenCL)
 add_executable(odometry_translate src/odometry_translate.cpp)
 ament_target_dependencies(odometry_translate rclcpp geometry_msgs nav_msgs px4_msgs OpenCL)
+add_executable(px4_translation src/PX4Translation.cpp)
+ament_target_dependencies(px4_translation rclcpp px4_msgs sensor_msgs)
 
 target_include_directories(TargetDetection PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -35,6 +38,11 @@ target_include_directories(TargetDetection PUBLIC
 target_include_directories(commercial PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
+
+target_include_directories(px4_translation PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include/${PROJECT_NAME}>)
+
 target_compile_features(commercial PUBLIC c_std_99 cxx_std_20)  # Require C99 and C++20
 
 install(DIRECTORY launch
@@ -50,6 +58,9 @@ install(TARGETS odometry_translate
   DESTINATION lib/${PROJECT_NAME})
 
 install(TARGETS commercial
+  DESTINATION lib/${PROJECT_NAME})
+
+install(TARGETS px4_translation
   DESTINATION lib/${PROJECT_NAME})
 
 # install(TARGETS main
