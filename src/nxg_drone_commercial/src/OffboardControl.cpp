@@ -200,21 +200,19 @@ void OffboardControl::sendVehicleCommand(uint16_t command, float param_1, float 
 //Takes OpenVINS VIO Messages and Translates to PX4 VehicleOdometry
 void OffboardControl::publishVIO(nav_msgs::msg::Odometry msg) {
     px4_msgs::msg::VehicleOdometry vio_msg;
+    //OpenVINS uses gravity to initialize a imu_frame, with RealSense D435i this frame gets put with X direction to the right of camera, Y direction down and Z direction forward
     Eigen::Quaterniond orientation = Eigen::Quaterniond(msg.pose.pose.orientation.w, msg.pose.pose.orientation.x, msg.pose.pose.orientation.y, msg.pose.pose.orientation.z);
-    //Eigen::Quaterniond ned_orientation = px4_ros_com::frame_transforms::enu_to_ned_orientation(px4_ros_com::frame_transforms::baselink_to_aircraft_orientation(orientation));
     Eigen::Quaterniond ned_orientation = px4_ros_com::frame_transforms::ros_to_px4_orientation(orientation);
     Eigen::Vector3d position = Eigen::Vector3d(msg.pose.pose.position.x, msg.pose.pose.position.y, msg.pose.pose.position.z);
     Eigen::Vector3d ned_position = px4_ros_com::frame_transforms::enu_to_ned_local_frame(position);
-    Eigen::Vector3d linear_velocity = Eigen::Vector3d(msg.twist.twist.linear.x, msg.twist.twist.linear.y, msg.twist.twist.linear.z);
-    Eigen::Vector3d ned_linear_velocity = px4_ros_com::frame_transforms::enu_to_ned_local_frame(linear_velocity);
-    Eigen::Vector3d angular_velocity = Eigen::Vector3d(msg.twist.twist.angular.x, msg.twist.twist.angular.y, msg.twist.twist.angular.z);
-    Eigen::Vector3d ned_angular_velocity = px4_ros_com::frame_transforms::enu_to_ned_local_frame(angular_velocity);
-    vio_msg.q = {static_cast<float>(-ned_orientation.w()), static_cast<float>(-ned_orientation.x()), static_cast<float>(ned_orientation.y()), static_cast<float>(ned_orientation.z())};
+    Eigen::Vector3d linear_velocity = Eigen::Vector3d(-msg.twist.twist.linear.y, -msg.twist.twist.linear.x, -msg.twist.twist.linear.z);		//Transform from RBD to FLU due to d435i imu
+    Eigen::Vector3d angular_velocity = Eigen::Vector3d(-msg.twist.twist.angular.y, -msg.twist.twist.angular.x, -msg.twist.twist.angular.z);	//Transform from RBD to FLU due to d435i imu
+    vio_msg.q = {static_cast<float>(ned_orientation.w()), static_cast<float>(ned_orientation.x()), static_cast<float>(ned_orientation.y()), static_cast<float>(ned_orientation.z())};
     vio_msg.position = {static_cast<float>(ned_position.x()), static_cast<float>(ned_position.y()), static_cast<float>(ned_position.z())};
     vio_msg.velocity_frame = px4_msgs::msg::VehicleOdometry::VELOCITY_FRAME_BODY_FRD;
     vio_msg.pose_frame = px4_msgs::msg::VehicleOdometry::POSE_FRAME_FRD;
-    vio_msg.velocity = {ned_linear_velocity.x(), ned_linear_velocity.y(), ned_linear_velocity.z()};
-    vio_msg.angular_velocity = {ned_angular_velocity.x(), ned_angular_velocity.y(), ned_angular_velocity.z()};
+    vio_msg.velocity = {-linear_velocity.z(), -linear_velocity.y(), -linear_velocity.x()};
+    vio_msg.angular_velocity = {angular_velocity.x(), -angular_velocity.y(), -angular_velocity.z()};
     vio_msg.position_variance = {(float)msg.pose.covariance[7], (float)msg.pose.covariance[0], (float)msg.pose.covariance[14]};
     vio_msg.velocity_variance = {(float)msg.twist.covariance[7], (float)msg.twist.covariance[0], (float)msg.twist.covariance[14]};
     vio_msg.orientation_variance = {(float)msg.pose.covariance[28], (float)msg.pose.covariance[21], (float)msg.pose.covariance[35]};
@@ -223,6 +221,7 @@ void OffboardControl::publishVIO(nav_msgs::msg::Odometry msg) {
     vio_msg.reset_counter = 0;
     vio_msg.quality = 0;
     this->visual_inertial_odometry_pub->publish(vio_msg);
+    printf("VIO Position X::%f Y::%f Z::%f\n", vio_msg.position[0], vio_msg.position[1], vio_msg.position[2]);
 }
 
 void OffboardControl::publishOffboardControlMode() {

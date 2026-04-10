@@ -51,7 +51,7 @@ def generate_launch_description():
             {'queue_size_imu': 20},
             {'queue_size_camera': 20},
         ],
-        output='both',
+        output='log',
     )
 
     realsense_share_directory = get_package_share_directory("realsense2_camera")
