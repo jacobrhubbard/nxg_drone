@@ -40,19 +40,35 @@ def generate_launch_description():
         name='px4_ros_odom_translate',
     )
 
-    msckf_node = Node(
-        package='ov_msckf',
-        executable='run_subscribe_msckf',
-        namespace='ov_msckf',
-        parameters = [
-            {'use_stereo': True},
-            {'max_cameras': 2},
-            {'config_path': config_path},
-            {'queue_size_imu': 20},
-            {'queue_size_camera': 20},
+    msckf_node = TimerAction(
+        period=15.0,
+        actions=[
+            Node(
+            package='ov_msckf',
+            executable='run_subscribe_msckf',
+            namespace='ov_msckf',
+            parameters = [
+                {'use_stereo': True},
+                {'max_cameras': 2},
+                {'config_path': config_path},
+                {'queue_size_imu': 20},
+                {'queue_size_camera': 20},
+            ],
+            output='log',
+            )
         ],
-        output='log',
     )
+
+    # ov_eval_node = Node(
+    #     package='ov_eval',
+    #     name='record_timing',
+    #     executable='eval_timing',
+    #     output='screen',
+    #     parameters = [
+    #         {'nodes': '/run_subscribe_msckf'},
+    #         {'output': '/tmp/psutil_log.txt'},
+    #     ]
+    # )
 
     rplidar_node = Node(
         package='rplidar_ros',
@@ -102,6 +118,7 @@ def generate_launch_description():
         flight_control_node,
         odometry_translation_node,
         msckf_node,
+        # ov_eval_node,
         target_detection_node,
         rplidar_node,
         translation_node
